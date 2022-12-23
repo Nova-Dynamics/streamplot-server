@@ -1,0 +1,33 @@
+.color-on {
+  background: rgb(0, 187, 21);
+  color: rgb(255, 255, 255);
+}
+
+.color-off {
+  background: rgb(162, 162, 162);
+  color: rgb(255, 255, 255);
+}
+
+.log-color-info {
+  color: rgb(14, 152, 4)
+}
+
+.log-color-warn {
+  color: rgb(152, 138, 4)
+}
+
+.log-color-error {
+  color: rgb(171, 50, 50)
+}
+
+.state-color-running {
+  color: rgb(14, 152, 4)
+}
+
+.state-color-completed {
+  color: rgb(147, 147, 147)
+}
+
+.state-color-error {
+  color: rgb(171, 50, 50) 
+}

@@ -1,0 +1,8 @@
+<div style="display: flex; flex-direction: column;max-height:50vh">
+  <h5>{{name}}</h5>
+  <div class="logger-window p-2" style="display: flex; flex-direction: column;overflow-y: scroll;background: #eee">
+    {{#entries}}
+      <div><span=>{{time}}: </span><span class="log-color-{{level}}">({{level}}) {{message}}</span></div>
+    {{/entries}}
+  </div>
+</div>
