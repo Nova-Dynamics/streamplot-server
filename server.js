@@ -42,10 +42,9 @@ let plot_instances = [
     server.on("request", app);
 
     app
-        .use(body_parser.urlencoded({extended: false})) // Middleware for POST body parsing (use x-www-form-urlencoded). We would like to use this on a per-router basis, but it inhibits our ability to check body auth (below)
-    // .use(Auth.meddle)   // Check auth
+        .use(body_parser.json({ limit: '100mb' })) 
 
-        .use(morgan(':remote-addr - ":method :url HTTP/:http-version" :status :res[content-length] - :response-time ms', { "stream" : info_log_stream }))   // Morgan HTTP logging
+        //.use(morgan(':remote-addr - ":method :url HTTP/:http-version" :status :res[content-length] - :response-time ms', { "stream" : info_log_stream }))   // Morgan HTTP logging
         .use(express.static("webapp/public/")); // serve index.html on `GET /`
 
 
@@ -57,10 +56,50 @@ let plot_instances = [
         next();
     });
 
+    app.post('/add_plot_instance', (req, res) => {
+        const plot_inst = req.body.plot_instance;
+
+        if (!plot_inst || !plot_inst.id) {
+          return res.status(400).send({ error: 'Missing required fields' });
+        }
+      
+        let existing_plot_index = plot_instances.findIndex((plot) => plot.id === plot_inst.id);
+        if (existing_plot_index >= 0) {
+          plot_instances[existing_plot_index] = plot_inst;
+        } else {
+          plot_instances.push(plot_inst);
+        }
+      
+        return res.send({ message: 'Plot instance added or updated successfully', url:  "http://" + server.address().address + ":" + server.address().port + "/?page=plot-"+plot_inst.id});
+      });
+
+    app.post('/plot/:plot_id/datastate_update', (req, res) => {
+        const plot_id = req.params.plot_id;
+        const datastate = req.body.datastate;
+
+        
+        let pl = plot_instances.find((plot) => plot.id == plot_id);
+      
+        if (pl)
+        {
+            pl.fields.forEach((f)=>{
+                f.elements.forEach((e)=>{
+                    if (e.datastate.id == datastate.id) Object.assign(e.datastate, datastate)
+                })
+            })
+        }
+        
+
+        io_server.emit("datastate_update", datastate)
+    
+        return res.send({success: true});
+    });
+      
 
 
-    let port = 80;
-    server.listen({port: port}, () => {
+
+    let port = 1234;
+    server.listen(port, "127.0.0.1", () => {
       log.info(`Example app listening on port ${port}`)
     })
 
@@ -94,12 +133,7 @@ let plot_instances = [
 
       });
 
-      sock.on('create_plot_instance', (template_index, name, cb) => {
-        let plot = new plot_templates[template_index](managers, name, plot_instances.length);
-        plot._run();
-        plot_instances.push(plot);
-        return cb({data: plot_instances.map((t)=>({...t.constructor, ...t})), error:null} )
-      });
+
     });
 
 

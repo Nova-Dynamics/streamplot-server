@@ -2,9 +2,9 @@ const moment = require("moment");
 
 const Page = require("./Page")
 const PartialsRenderer = require("./PartialsRenderer")
+const sp = require("@novadynamics/streamplot")
 
-
-class plotInstancePage extends Page
+class PlotInstancePage extends Page
 {
 
   constructor(page_name) {
@@ -22,11 +22,18 @@ class plotInstancePage extends Page
     this.labeled_container_partial = new PartialsRenderer("labeled_container");
 
 
-    // this.io.on("plot_update", (t)=>{
-    //   if (t.id == this.plot_id)
-    //     this.render_plot(t)
+    this.io.on("datastate_update", (ds)=>{
 
-    // })
+      if (!this.sp_window) return;
+
+      this.sp_window.fields.forEach((f)=>{
+        let local_ds = f.select_datastate_by_id(ds.id)
+        if (local_ds)
+          return Object.assign(local_ds, ds)
+        
+      })
+
+    })
 
     this.logger_partial = new PartialsRenderer("logger");
 
@@ -52,26 +59,34 @@ class plotInstancePage extends Page
 
     $("#main-content").empty();
     let plot_instance_html = this.plot_instance_partial.render_into("#main-content", instance);
+    this.sp_window = new sp.Window(plot_instance_html, {redraw_time_ms: instance.duty_cycle})
 
-    instance.output.forEach((output)=>{
+    console.log(instance);
 
-      switch (output.visualization_type) {
-        case 'logger':
-          this.logger_partial.render_into(plot_instance_html, output);
 
-          let logger_window = plot_instance_html.find(".logger-window");
-          logger_window.scrollTop(logger_window[0].scrollHeight);
+    instance.fields.forEach((f)=>{
 
-          break;
-        default:
-          return
-      }
+      let ax = this.sp_window.add_subplot(f.bbox, f.config)
 
+      f.elements.forEach((e)=>{
+        let ds = new sp.DataState[e.datastate.class_name]({})
+        Object.assign(ds, e.datastate)
+
+        let el = new sp.Element[e.class_name](ds, {})
+
+        Object.assign(el, {...e, datastate: ds});
+
+        ax.add_element(el)
+      })
     })
+
+    this.sp_window.init()
+    this.sp_window.start()
+
   }
 
 }
 
 
 
-module.exports = plotInstancePage;
+module.exports = PlotInstancePage;
