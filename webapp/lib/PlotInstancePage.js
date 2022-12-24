@@ -37,9 +37,7 @@ class PlotInstancePage extends Page
       })
 
     })
-
-    this.logger_partial = new PartialsRenderer("logger");
-
+    
     $(document).ready(()=>this.load());
 
   }
@@ -49,7 +47,6 @@ class PlotInstancePage extends Page
 
     await this.plot_instance_partial.load();
     await this.labeled_container_partial.load();
-    await this.logger_partial.load();
 
     let instance = await this.emit_io("get_plot_instance", this.plot_id);
     await this.render_plot(instance);

@@ -31,9 +31,7 @@ info_log_stream._write=(chunk, encoding, done) => {
 };
 
 
-let plot_instances = [
-    {title: "Fake Instance", id:10}
-];
+let plot_instances = [];
 
 
 (async ()=>{
