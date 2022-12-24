@@ -17,19 +17,22 @@ class PlotInstancePage extends Page
     //HACK -- The nav-bar loads after this class, so we need a timeout to set the nav-item to active
     setTimeout(()=>this.page_link_element.addClass("active"), 500);
 
-    this.plot_id = this.search_params.page.split("-")[1];
+    this.plot_id = this.search_params.page.split("-").slice(1).join("-");
+
     this.plot_instance_partial = new PartialsRenderer("plot_instance");
     this.labeled_container_partial = new PartialsRenderer("labeled_container");
 
 
-    this.io.on("datastate_update", (ds)=>{
+    this.io.on("datastate_update", (datastates)=>{
 
       if (!this.sp_window) return;
 
       this.sp_window.fields.forEach((f)=>{
-        let local_ds = f.select_datastate_by_id(ds.id)
-        if (local_ds)
-          return Object.assign(local_ds, ds)
+        Object.keys(datastates).forEach((dsid)=>{
+          let local_ds = f.select_datastate_by_id(dsid)
+          if (local_ds) Object.assign(local_ds, datastates[dsid])
+        })
+        
         
       })
 
@@ -61,12 +64,9 @@ class PlotInstancePage extends Page
     let plot_instance_html = this.plot_instance_partial.render_into("#main-content", instance);
     this.sp_window = new sp.Window(plot_instance_html, {redraw_time_ms: instance.duty_cycle})
 
-    console.log(instance);
-
-
     instance.fields.forEach((f)=>{
 
-      let ax = this.sp_window.add_subplot(f.bbox, f.config)
+      let ax = new sp[f.class_name](this.sp_window, f.bbox, f.config);
 
       f.elements.forEach((e)=>{
         let ds = new sp.DataState[e.datastate.class_name]({})

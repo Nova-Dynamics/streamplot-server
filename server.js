@@ -75,7 +75,7 @@ let plot_instances = [
 
     app.post('/plot/:plot_id/datastate_update', (req, res) => {
         const plot_id = req.params.plot_id;
-        const datastate = req.body.datastate;
+        const datastates = req.body.datastates;
 
         
         let pl = plot_instances.find((plot) => plot.id == plot_id);
@@ -84,13 +84,13 @@ let plot_instances = [
         {
             pl.fields.forEach((f)=>{
                 f.elements.forEach((e)=>{
-                    if (e.datastate.id == datastate.id) Object.assign(e.datastate, datastate)
+                    if (datastates[e.datastate.id]) Object.assign(e.datastate, datastates[e.datastate.id])
                 })
             })
         }
         
 
-        io_server.emit("datastate_update", datastate)
+        io_server.emit("datastate_update", datastates)
     
         return res.send({success: true});
     });
